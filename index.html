@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My To-Do List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-pink-300 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-xl bg-white shadow-xl rounded-2xl p-6">
+    <h1 class="text-center text-2xl text-pink-500 font-bold mb-4">My To-Do List</h1>
+
+    <div class="flex gap-2 mb-4">
+      <input id="taskInput" class="flex-1 border p-2 rounded" placeholder="Tambahkan tugas..." />
+      <button onclick="handleAdd()" class="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-300">Tambah</button>
+    </div>
+
+    <input id="searchInput" oninput="renderTasks()" class="w-full border p-2 mb-4 rounded" placeholder="Cari tugas..." />
+
+    <ul id="taskList" class="space-y-2"></ul>
+
+    <p class="mt-4 text-sm text-gray-600">Tugas aktif: <span id="activeCount">0</span></p>
+  </div>
+
+  <script>
+    let tasks = [];
+
+    function addTask(...titles) { //REST PARAMETER
+      titles.forEach(title => {
+        const newTask = {
+          id: Date.now() + Math.random(),
+          title,
+          completed: false,
+        };
+        tasks = [...tasks, newTask]; // SPREAD
+      });
+      renderTasks();
+    }
+
+    function deleteTask(idToDelete) {
+      tasks = tasks.filter(({ id }) => id !== idToDelete);
+      renderTasks();
+    }
+
+    function toggleComplete(id) {
+      tasks = tasks.map(task =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      );
+      renderTasks();
+    }
+
+    function editTask(id, newTitle) {
+      tasks = tasks.map(task =>
+        task.id === id ? { ...task, title: newTitle } : task
+      );
+      renderTasks();
+    }
+
+    function getActiveTasks() {
+      return tasks.filter(({ completed }) => !completed); // Destructuring
+    }
+
+    function renderTasks() {
+      const list = document.getElementById("taskList");
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      list.innerHTML = "";
+
+      const filteredTasks = tasks.filter(({ title }) =>
+        title.toLowerCase().includes(search)
+      );
+
+      filteredTasks.forEach(({ id, title, completed }) => {
+        const li = document.createElement("li");
+        li.className = "flex justify-between items-center p-2 border rounded hover:bg-gray-50";
+
+        const left = document.createElement("div");
+        left.className = "flex items-center gap-2";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = completed;
+        checkbox.onchange = () => toggleComplete(id);
+
+        const text = document.createElement("span");
+        text.textContent = title;
+        text.className = completed ? "line-through text-gray-400" : "";
+
+        left.appendChild(checkbox);
+        left.appendChild(text);
+
+        const right = document.createElement("div");
+        right.className = "flex gap-2";
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.onclick = () => {
+          const newTitle = prompt("Edit tugas:", title);
+          if (newTitle) editTask(id, newTitle);
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️";
+        delBtn.onclick = () => deleteTask(id);
+
+        right.appendChild(editBtn);
+        right.appendChild(delBtn);
+
+        li.appendChild(left);
+        li.appendChild(right);
+        list.appendChild(li);
+      });
+
+      document.getElementById("activeCount").textContent = getActiveTasks().length;
+    }
+
+    function handleAdd() {
+      const input = document.getElementById("taskInput");
+      const value = input.value.trim();
+      if (value) {
+        addTask(value); 
+        input.value = "";
+      }
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
